@@ -1,0 +1,107 @@
+service: ${self:custom.prefix}-api
+frameworkVersion: ">=1.46.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stackName: ${self:service}-${self:provider.stage}
+  # deploymentBucket:
+  #   name: ${file(./serverless.common.yml):deploymentBucket}
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  versionFunctions: false
+  tracing:
+    apiGateway: true
+    lambda: true
+  logs:
+    restApi: true
+  iamRoleStatements:
+    - ${file(./serverless.common.yml):lambdaPolicyXRay}
+
+custom:
+  # common config
+  accountId: !Ref AWS::AccountId
+  region: ${file(./serverless.common.yml):region}
+  prefix: ${file(./serverless.common.yml):prefix}
+  apiPrefix: ${file(./serverless.common.yml):apiPrefix}
+  stage: ${file(./serverless.common.yml):stage}
+  # config: ${file(./config/${self:custom.stage}.json)}
+
+  auth: ${file(./resources/auth/parameters.js)}
+  s3: ${file(./resources/storage/parameters.json)}
+  # search: ${file(./resources/elastic-search/parameters.json)}
+
+  aurora:
+    DB_NAME: ${self:custom.apiPrefix}Aurora
+    USERNAME: ${self:custom.apiPrefix}Master
+    PASSWORD: zxc123fds
+    HOST: !GetAtt [AuroraRDSCluster, Endpoint.Address]
+    PORT: !GetAtt [AuroraRDSCluster, Endpoint.Port]
+
+  webpack:
+    keepOutputDirectory: true
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+  scriptHooks:
+    after:deploy:deploy:
+      - scripts/envSetup.js
+  # https://github.com/ACloudGuru/serverless-plugin-aws-alerts
+  alerts:
+    stages:
+      - prod
+    dashboards: true
+    alarms:
+      - functionThrottles
+      - functionErrors
+      - functionInvocations
+      - functionDuration
+  serverless-offline:
+    port: 4000
+    noAuth: true
+  serverless-iam-roles-per-function:
+    defaultInherit: true
+  appSync:
+    - ${file(./src/graphql/appSync.yml)}
+
+functions:
+  # - ${file(./resources/elastic-search/fn.yml)}
+  # - ${file(./resources/auth/fn.yml)}
+  # appsync
+  - ${file(./src/graphql/functions/fn.yml)}
+
+resources:
+  # resources
+  - ${file(./resources/auth/cf.yml)}
+  - ${file(./resources/storage/cf.yml)}
+  # appsync
+  - ${file(./src/graphql/resources.yml)}
+  # DB
+  - ${file(./resources/db/cf.yml)}
+
+package:
+  individually: false # Enables individual packaging for specific function.
+  excludeDevDependencies: true
+  exclude:
+    - coverage/**
+    - .circleci/**
+    - .gitignore
+    - bitbucket-pipelines.yml
+    - README.md
+    - serverless.yml
+
+plugins:
+  # This plugin will be loaded from the `plugins/` directory
+  # - ./plugins/serverless-custom-deploy-bucket
+
+  # This plugin will be loaded from the `.serverless_plugins/` or `node_modules/` directories
+  - serverless-webpack
+  # - serverless-secrets-plugin
+  # - serverless-rds-sync
+  # - serverless-custom-deploy-bucket
+  - serverless-appsync-plugin
+  - serverless-scriptable-plugin
+  - serverless-iam-roles-per-function
+  # - serverless-plugin-aws-alerts
+  - serverless-offline

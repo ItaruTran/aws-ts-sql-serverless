@@ -1,0 +1,42 @@
+DdbToEsFn:
+  handler: resources/elastic-search/python_streaming_function.lambda_handler
+  condition: ShouldCreateSearchService
+  package:
+    exclude:
+      - "**/*"
+    include:
+      - resources/elastic-search/python_streaming_function.py
+  runtime: python3.6
+  layers:
+    - Fn::FindInMap:
+        - LayerResourceMapping
+        - Ref: AWS::Region
+        - layerRegion
+  iamRoleStatements:
+    # these roles need for stream dato to ES
+    - Effect: Allow
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "*"
+    - Effect: Allow
+      Action:
+        - es:ESHttpPost
+        - es:ESHttpPut
+        - es:ESHttpDelete
+        - es:ESHttpGet
+      Resource:
+        - { "Fn::GetAtt": ["ElasticSearchInstance", "DomainArn"] }
+        - {
+            "Fn::Join":
+              [
+                "",
+                ["Fn::GetAtt": ["ElasticSearchInstance", "DomainArn"], "/*"],
+              ],
+          }
+  environment:
+    ES_ENDPOINT:
+      Fn::GetAtt: ["ElasticSearchInstance", "DomainEndpoint"]
+    ES_REGION:
+      Ref: "AWS::Region"
+    DEBUG: 0

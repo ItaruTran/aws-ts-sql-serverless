@@ -1,0 +1,33 @@
+UniVGraphqlApi:
+  handler: src/graphql/functions/graphql.main
+  environment:
+    COGNITO_USERPOOL_ID: !Ref CognitoUserPoolAppUserPool
+    #aurora
+    AURORA_HOST: ${self:custom.aurora.HOST}
+    AURORA_PORT: ${self:custom.aurora.PORT}
+    DB_NAME: ${self:custom.aurora.DB_NAME}
+    USERNAME: ${self:custom.aurora.USERNAME}
+    PASSWORD: ${self:custom.aurora.PASSWORD}
+  vpc:
+    securityGroupIds:
+      - !GetAtt AppSyncRDSVPC.DefaultSecurityGroup
+    subnetIds:
+      - !Ref AppSyncRDSSubnetPrivateA
+      - !Ref AppSyncRDSSubnetPrivateB
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "cognito-idp:*"
+      Resource: !Join
+        - ""
+        - - "arn:aws:cognito-idp:"
+          - !Ref "AWS::Region"
+          - ":"
+          - !Ref "AWS::AccountId"
+          - ":userpool/"
+          - !Ref CognitoUserPoolAppUserPool
+    - Effect: "Allow"
+      Action:
+        - "ses:SendEmail"
+        - "ses:SendRawEmail"
+      Resource: "*"

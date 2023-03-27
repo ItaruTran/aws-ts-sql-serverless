@@ -1,0 +1,19 @@
+- type: AWS_LAMBDA
+  name: ${self:custom.apiPrefix}LambdaGraphqlResolver
+  description: "Lambda for Graphql"
+  config:
+    functionName: UniVGraphqlApi
+    serviceRoleArn: !GetAtt [AppSyncLambdaServiceRole, Arn]
+# - type: AMAZON_ELASTICSEARCH
+#   name: ElasticSearchDataSource
+#   description: ElasticSearch service
+#   config:
+#     endpoint: !Join
+#       - ""
+#       - - "https://"
+#         - !GetAtt
+#           - ElasticSearchInstance
+#           - DomainEndpoint
+#     serviceRoleArn: !GetAtt
+#       - AppSyncESServiceRole
+#       - Arn

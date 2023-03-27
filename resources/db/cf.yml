@@ -1,0 +1,239 @@
+Resources:
+  #VPC and security group
+  AppSyncRDSVPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.10.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+
+  AppSyncRDSSubnetB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.11.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+
+  AppSyncRDSSubnetPrivateA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.20.0/24
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+
+  AppSyncRDSSubnetPrivateB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      CidrBlock: 10.0.21.0/24
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+
+  AppSyncRDSInternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSInternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref AppSyncRDSInternetGateway
+      VpcId: !Ref AppSyncRDSVPC
+
+  AppSyncRDSNatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AppSyncRDSInternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  AppSyncRDSNatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AppSyncRDSInternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  AppSyncRDSNatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt AppSyncRDSNatGateway1EIP.AllocationId
+      SubnetId: !Ref AppSyncRDSSubnetA
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSNatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt AppSyncRDSNatGateway2EIP.AllocationId
+      SubnetId: !Ref AppSyncRDSSubnetB
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSDefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AppSyncRDSInternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref AppSyncRDSInternetGateway
+
+  AppSyncRDSPublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPublicRouteTable
+      SubnetId: !Ref AppSyncRDSSubnetA
+
+  AppSyncRDSPublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPublicRouteTable
+      SubnetId: !Ref AppSyncRDSSubnetB
+
+  AppSyncRDSPrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSDefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref AppSyncRDSNatGateway1
+
+  AppSyncRDSPrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable1
+      SubnetId: !Ref AppSyncRDSSubnetPrivateA
+
+  AppSyncRDSPrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSDefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref AppSyncRDSNatGateway2
+
+  AppSyncRDSPrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref AppSyncRDSPrivateRouteTable2
+      SubnetId: !Ref AppSyncRDSSubnetPrivateB
+
+  NoIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "appsync-no-ingress-sg"
+      GroupDescription: "Security group with no ingress rule"
+      VpcId: !Ref AppSyncRDSVPC
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+
+  AppSyncRDSDBSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: Subnet group for the AppSync RDS cluster.
+      Tags:
+        -
+          Key: AWSAppSyncCreatedResource
+          Value: "CloudFormation Stack ${self:provider.stackName}"
+      SubnetIds:
+        - !Ref AppSyncRDSSubnetA
+        - !Ref AppSyncRDSSubnetB
+
+  #RDS cluster and other related resources
+  AuroraRDSClusterParameter:
+    Type: AWS::RDS::DBClusterParameterGroup
+    Properties:
+      Description: Parameter group for the Serverless Aurora RDS DB.
+      Family: aurora5.6
+      Parameters:
+        character_set_database: "utf32"
+  AuroraRDSCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      MasterUsername: ${self:custom.aurora.USERNAME}
+      MasterUserPassword: ${self:custom.aurora.PASSWORD}
+      DBSubnetGroupName: !Ref AppSyncRDSDBSubnetGroup
+      Engine: aurora
+      EngineMode: serverless
+      EngineVersion: 5.6.10a
+      DatabaseName: ${self:custom.aurora.DB_NAME}
+      BackupRetentionPeriod: 3
+      DBClusterParameterGroupName: !Ref AuroraRDSClusterParameter
+      VpcSecurityGroupIds:
+        - !GetAtt AppSyncRDSVPC.DefaultSecurityGroup
+      EnableHttpEndpoint: true

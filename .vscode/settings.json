@@ -1,0 +1,14 @@
+{
+    "emeraldwalk.runonsave": {
+        "commands": [
+            {
+                "match": "\\.graphql$",
+                "cmd": "yarn generate"
+            },
+            {
+                "match": "\\.gql$",
+                "cmd": "yarn generate"
+            }
+        ]
+    }
+}

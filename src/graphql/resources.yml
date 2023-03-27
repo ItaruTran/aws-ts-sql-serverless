@@ -1,0 +1,57 @@
+Resources:
+  # UniVGraphqlApiLogGroup:
+  #   Type: "AWS::Logs::LogGroup"
+  #   Properties:
+  #     RetentionInDays: "14"
+  AppSyncLoggingServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "CloudwatchLogging-${self:service}-${self:provider.stage}-Role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "appsync.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "CloudwatchLogging-${self:service}-${self:provider.stage}-Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - "*"
+  AppSyncLambdaServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "Lambda-${self:provider.stage}-${self:service}-Role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "appsync.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "Lambda-${self:service}-${self:provider.stage}-Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "lambda:invokeFunction"
+                Resource:
+                  - !GetAtt ["UniVGraphqlApiLambdaFunction", Arn]
+                  - Fn::Join:
+                    - ":"
+                    - - !GetAtt ["UniVGraphqlApiLambdaFunction", Arn]
+                      - "*"

@@ -1,0 +1,24 @@
+name: ${self:service}-${self:provider.stage}-api
+schema:
+  - src/graphql/schemas/schema.graphql
+authenticationType: AMAZON_COGNITO_USER_POOLS # API_KEY is also supported
+userPoolConfig:
+  awsRegion: ${self:provider.region}
+  defaultAction: ALLOW
+  userPoolId:
+    Ref: CognitoUserPoolAppUserPool
+additionalAuthenticationProviders:
+  - authenticationType: API_KEY
+mappingTemplatesLocation: src/graphql/resolvers
+logConfig:
+  loggingRoleArn: !GetAtt [AppSyncLoggingServiceRole, Arn]
+  level: ALL
+mappingTemplates:
+  - ${file(src/graphql/resolvers/mapping.yml)}
+dataSources:
+  - ${file(src/graphql/datasources.yml)}
+functionConfigurations:
+  - dataSource: ${self:custom.apiPrefix}LambdaGraphqlResolver
+    name: ${self:custom.apiPrefix}ResolverFunction
+    request: "common/Function.common.req.vtl"
+    response: "common/Function.common.res.vtl"

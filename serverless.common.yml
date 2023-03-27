@@ -1,0 +1,12 @@
+frameworkVersion: ">=1.46.0 <2.0.0"
+lambdaPolicyXRay:
+  Effect: Allow
+  Action:
+    - xray:PutTraceSegments
+    - xray:PutTelemetryRecords
+  Resource: "*"
+prefix: abc
+apiPrefix: Abc
+stage: ${opt:stage, 'dev'}
+region: 'ap-southeast-1'
+deploymentBucket: deploys

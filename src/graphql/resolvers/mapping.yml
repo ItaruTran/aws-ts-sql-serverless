@@ -1,0 +1,7 @@
+- type: Query
+  field: getStatus
+  kind: PIPELINE
+  request: 'aurora/Query.getStatus.req.vtl'
+  response: 'common/Pipeline.common.res.vtl'
+  functions:
+    - UniVResolverFunction

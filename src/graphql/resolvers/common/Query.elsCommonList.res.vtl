@@ -1,0 +1,20 @@
+#set( $items = [] )
+#foreach( $entry in $ctx.result.hits.hits )
+  $util.qr($items.add($entry.get("_source")))
+#end
+
+#set($from = 0)
+#if ($ctx.args.nextToken)
+  #set($from = $ctx.args.nextToken)
+#end
+
+#set($last = $from + $items.size())
+#if($ctx.result.hits.total > $last)
+  #set( $nextToken = $last )
+#end
+
+$util.toJson({
+  "items": $items,
+  "total": $ctx.result.hits.total,
+  "nextToken": $nextToken
+})

@@ -1,0 +1,52 @@
+{
+  "name": "unicoice-api",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "export SLS_DEBUG=* && export NODE_DEBUG=appsync-* && serverless offline start",
+    "dev": "serverless offline start",
+    "deploy": "export SLS_DEBUG=* && sls deploy -v",
+    "encrypt": "serverless encrypt --stage dev --password ",
+    "decrypt": "serverless decrypt --stage dev --password ",
+    "generate": "graphql-codegen"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "^2.588.0",
+    "moment": "^2.24.0",
+    "uuid": "^3.3.3",
+    "serverless-mysql": "^1.5.4",
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.3.4",
+    "@babel/plugin-proposal-class-properties": "^7.3.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.2.0",
+    "@babel/preset-env": "^7.5.5",
+    "@graphql-codegen/cli": "^1.13.5",
+    "@graphql-codegen/typescript": "^1.13.5",
+    "@types/aws-lambda": "^8.10.17",
+    "@types/node": "^10.12.18",
+    "@types/uuid": "^3.4.6",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-source-map-support": "^2.0.1",
+    "copy-webpack-plugin": "^5.0.4",
+    "dotenv": "^8.2.0",
+    "fork-ts-checker-webpack-plugin": "^3.0.1",
+    "fs-extra": "^8.1.0",
+    "serverless-appsync-plugin": "^1.1.2",
+    "serverless-iam-roles-per-function": "^2.0.1",
+    "serverless-offline": "^5.11.0",
+    "serverless-plugin-aws-alerts": "^1.2.4",
+    "serverless-scriptable-plugin": "^1.0.2",
+    "serverless-stage-manager": "^1.0.5",
+    "serverless-webpack": "^5.2.0",
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.2.4",
+    "webpack-node-externals": "^1.7.2",
+    "webpack": "^4.29.0"
+  },
+  "author": "Bui Van Binh <bvbinh@sk-global.biz> (https://sk-global.biz/)"
+}
